@@ -1,58 +1,34 @@
 import 'package:flutter/material.dart';
 
-class SignUpScreen extends StatelessWidget {
+class SignUpScreen extends StatefulWidget {
+  @override
+  _SignUpScreenState createState() => _SignUpScreenState();
+}
+
+class _SignUpScreenState extends State<SignUpScreen> {
+  bool isPasswordVisible = false;
+  bool isConfirmPasswordVisible = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          // White Card Background
-          Positioned(
-            top: 233,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 579,
-              decoration: BoxDecoration(
-                color: Color(0xFF1F214D),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-            ),
-          ),
-          
-          // Back Button
-          Positioned(
-            top: 50,
-            left: 24,
-            child: CircleAvatar(
-              radius: 22.5,
-              backgroundColor: Colors.white,
-              child: Icon(Icons.arrow_back, color: Color(0xFF5E616F)),
-            ),
-          ),
-          
-          // Logo
-          Positioned(
-            top: 39,
-            left: 133,
-            child: Container(
-              width: 94,
-              height: 94,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/snapvel_2.png'),
-                  fit: BoxFit.cover,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            SizedBox(height: 50),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: IconButton(
+                  icon: Icon(Icons.arrow_back, color: Color(0xff6b6d77)),
+                  onPressed: () {},
                 ),
               ),
             ),
-          ),
-          
-          // Sign Up Header
-          Positioned(
-            top: 123,
-            left: 124,
-            child: Text(
+            Image.asset('assets/logo.png', width: 94, height: 94),
+            Text(
               'Sign Up',
               style: TextStyle(
                 fontSize: 30,
@@ -60,12 +36,7 @@ class SignUpScreen extends StatelessWidget {
                 color: Color(0xFFF98B00),
               ),
             ),
-          ),
-          
-          Positioned(
-            top: 160,
-            left: 75,
-            child: Text(
+            Text(
               'Please sign up to get started',
               style: TextStyle(
                 fontSize: 16,
@@ -73,31 +44,36 @@ class SignUpScreen extends StatelessWidget {
                 color: Color(0xFFF98B00),
               ),
             ),
-          ),
-          
-          // Input Fields
-          Positioned(
-            top: 257,
-            left: 24,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                buildInputField('Name', 'John Doe'),
-                SizedBox(height: 10),
-                buildInputField('Email', 'example@gmail.com'),
-                SizedBox(height: 10),
-                buildInputField('Password', '**********', isPassword: true),
-                SizedBox(height: 10),
-                buildInputField('Re-Type Password', '**********', isPassword: true),
-              ],
+            Container(
+              margin: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Color(0xFF1F214D),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  buildInputField('Name', ''),
+                  SizedBox(height: 10),
+                  buildInputField('Email', ''),
+                  SizedBox(height: 10),
+                  buildPasswordField('Password', isPasswordVisible, () {
+                    setState(() {
+                      isPasswordVisible = !isPasswordVisible;
+                    });
+                  }),
+                  SizedBox(height: 10),
+                  buildPasswordField(
+                      'Re-Type Password', isConfirmPasswordVisible, () {
+                    setState(() {
+                      isConfirmPasswordVisible = !isConfirmPasswordVisible;
+                    });
+                  }),
+                ],
+              ),
             ),
-          ),
-          
-          // Sign Up Button
-          Positioned(
-            top: 720,
-            left: 24,
-            child: ElevatedButton(
+            ElevatedButton(
               onPressed: () {},
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(0xFFFFBD69),
@@ -116,51 +92,62 @@ class SignUpScreen extends StatelessWidget {
                 ),
               ),
             ),
-          ),
-        ],
+            SizedBox(height: 20),
+          ],
+        ),
       ),
     );
   }
 
-  Widget buildInputField(String label, String hint, {bool isPassword = false}) {
+  Widget buildInputField(String label, String hint) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label.toUpperCase(),
           style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w400,
-            color: Colors.white,
-          ),
+              fontSize: 13, fontWeight: FontWeight.w400, color: Colors.white),
         ),
         SizedBox(height: 5),
-        Container(
-          width: 327,
-          height: 62,
-          decoration: BoxDecoration(
-            color: Color(0xFFF0F5FA),
-            borderRadius: BorderRadius.circular(10),
+        TextField(
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Color(0xFFF0F5FA),
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide.none),
+            hintText: hint,
+            hintStyle: TextStyle(color: Color(0xFFA0A5BA)),
           ),
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  obscureText: isPassword,
-                  decoration: InputDecoration(
-                    hintText: hint,
-                    border: InputBorder.none,
-                    hintStyle: TextStyle(
-                      color: Color(0xFFA0A5BA),
-                      letterSpacing: isPassword ? 4.0 : 0,
-                    ),
-                  ),
-                ),
-              ),
-              if (isPassword)
-                Icon(Icons.visibility_off, color: Color(0xFFA0A5BA)),
-            ],
+        ),
+      ],
+    );
+  }
+
+  Widget buildPasswordField(
+      String label, bool isVisible, VoidCallback toggleVisibility) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: TextStyle(
+              fontSize: 13, fontWeight: FontWeight.w400, color: Colors.white),
+        ),
+        SizedBox(height: 5),
+        TextField(
+          obscureText: !isVisible,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Color(0xFFF0F5FA),
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide.none),
+            suffixIcon: IconButton(
+              icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off,
+                  color: Color(0xFFA0A5BA)),
+              onPressed: toggleVisibility,
+            ),
           ),
         ),
       ],
