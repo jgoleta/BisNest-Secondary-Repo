@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 
 class CategoryItem extends StatelessWidget {
   final String imageUrl;
-  final String name;
+  final String title;
 
   const CategoryItem({
     Key? key,
     required this.imageUrl,
-    required this.name,
+    required this.title,
   }) : super(key: key);
 
   @override
@@ -16,59 +16,41 @@ class CategoryItem extends StatelessWidget {
       width: 120,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        //overflow: Overflow.hidden,
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(12),
-              topRight: Radius.circular(12),
-            ),
-            child: Image.network(
-              imageUrl,
-              width: 120,
-              height: 120,
-              fit: BoxFit.cover,
-              semanticLabel: '$name category image',
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
-                return Container(
-                  width: 120,
-                  height: 120,
-                  color: Colors.grey[300],
-                  child: const Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                );
-              },
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  width: 120,
-                  height: 120,
-                  color: Colors.grey[300],
-                  child: const Icon(Icons.error),
-                );
-              },
+          // Image
+          Container(
+            height: 120,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: NetworkImage(imageUrl),
+                fit: BoxFit.cover,
+              ),
             ),
           ),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(12),
-                bottomRight: Radius.circular(12),
-              ),
-            ),
+
+          // Title
+          Padding(
+            padding: const EdgeInsets.all(8.0),
             child: Text(
-              name,
-              textAlign: TextAlign.center,
+              title,
               style: const TextStyle(
-                fontWeight: FontWeight.w500,
+                fontFamily: 'Inter',
                 fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF1F2937),
               ),
+              textAlign: TextAlign.center,
             ),
           ),
         ],
