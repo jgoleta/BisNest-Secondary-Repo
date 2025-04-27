@@ -19,7 +19,6 @@ class MyApp extends StatelessWidget {
 class PostScreen extends StatelessWidget {
   const PostScreen({super.key});
 
-  // Action when the POST button is pressed
   void onPostPressed(BuildContext context) {
     showDialog(
       context: context,
@@ -50,7 +49,6 @@ class PostScreen extends StatelessWidget {
     );
   }
 
-  // Action when the CANCEL button is pressed
   void onCancelPressed(BuildContext context) {
     // For example, clear form fields or navigate back
     ScaffoldMessenger.of(context).showSnackBar(
@@ -81,7 +79,7 @@ class PostScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              // Yellow Circle Button
+       
               Positioned(
                 left: 85,
                 top: 745,
@@ -243,7 +241,7 @@ class PostScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              // Example "Location" Input Rectangle
+  
               Positioned(
                 left: 20,
                 top: 325,
@@ -270,7 +268,7 @@ class PostScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              // Yellow Box below Location
+      
               Positioned(
                 left: 20,
                 top: 385,
@@ -287,7 +285,7 @@ class PostScreen extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Align(
-                        alignment: Alignment.center, // Changed to center
+                        alignment: Alignment.center, 
                         child: Text(
                           'POST',
                           style: TextStyle(
