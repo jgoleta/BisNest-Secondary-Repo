@@ -275,12 +275,10 @@
         .delete-modal-btn,
         .delete-btn {
             background: #d63c3c !important;
-            color: #fff !important;
-            padding: 12px 20px;
+            padding: 8px 12px;
             font-weight: bold;
             border: none;
-            border-radius: 10px;
-            background-color: #111;
+            border-radius: 50%;
             color: #fff;
             cursor: pointer;
             transition: background 0.3s, color 0.3s;
@@ -292,6 +290,17 @@
             background: #b40202 !important;
             color: #ffffff !important;
             border: none;
+        }
+
+        .edit-button {
+            background-color: var(--palette-navbar);
+            color: #fff;
+            padding: 8px 12px;
+            font-weight: bold;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.3s, color 0.3s;
         }
 
         .toggle-form-button,
@@ -312,7 +321,8 @@
 
         .toggle-form-button:hover,
         .add-button:hover,
-        .submit-button:hover {
+        .submit-button:hover,
+        .edit-button:hover {
             background-color: #4f46e5 !important;
             border: none !important;
         }
@@ -355,7 +365,7 @@
             margin: 5vh auto;
             padding: 2vw;
             background-color: #fff;
-            box-shadow: 0vw 0vw 1vw #111;
+
             border: 1px solid #e0e0e0;
         }
 
@@ -375,7 +385,7 @@
             border: 1px solid #bbb;
             border-radius: 8px;
             font-size: 15px;
-            max-width: 300px;
+            max-width: 500px;
             flex: 1;
             background: #fff;
             color: #111;
@@ -441,11 +451,11 @@
             width: 100%;
             border-collapse: separate;
             border-spacing: 0;
-            border-radius: 12px;
+            border-radius: 0px;
             overflow: hidden;
             background-color: #fff;
             margin-top: 20px;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.07);
+            box-shadow: 0 6px 9px #111;
             color: #111;
         }
 
@@ -599,59 +609,82 @@
     </nav>
 
     <main class="main-content">
-        <h1 class="page-title">Customer Management</h1>
-        <div class="main-container">
-            <div class="search-bar">
-                <input type="text" id="searchInput" placeholder="Search Customer Name:" onkeyup="searchCustomer()">
-                <div class="button-container">
-                    <button class="toggle-form-button" onclick="toggleForm()">+ New</button>
-                </div>
-            </div>
 
-            <div class="modal-overlay" id="modalOverlay" style="display:none;"></div>
-            <div class="customer-form-container" id="formContainer">
-                <h2 class="form-title" id="formTitle">Customer Information</h2>
-                <form class="customer-form" method="POST">
-                    {% csrf_token %}
-                    {{ form.as_p }}
-                    <div class="submit-wrapper">
-                        <button type="submit" class="submit-button">Submit</button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="customer-table-container">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Customer ID</th>
-                            <th>Name</th>
-                            <th>Phone</th>
-                            <th>Address</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody class="table-body">
-                        
-                        {% for cust in customers %}
-                        <tr>
-                            <td>{{ cust.id }}</td>
-                            <td>{{ cust.name }}</td>
-                            <td>{{ cust.phone }}</td>
-                            <td>{{ cust.address }}</td>
-                            <td>
-                                <form action="{% url 'delete_customer' cust.id %}" method="post"
-                                    style="display:inline;">
-                                    {% csrf_token %}
-                                    <button type="submit" class="delete-button">Delete</button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search Customer Name:" onkeyup="searchCustomer()">
+            <div class="button-container">
+                <button class="toggle-form-button" onclick="toggleForm()">+ New</button>
             </div>
         </div>
+
+        <div class="modal-overlay" id="modalOverlay" style="display:none;"></div>
+        <div class="customer-form-container" id="formContainer">
+            <h2 class="form-title" id="formTitle">Customer Information</h2>
+            <form class="customer-form" method="POST">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <div class="submit-wrapper">
+                    <button type="submit" class="submit-button">Submit</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="customer-table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Customer ID</th>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Address</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody class="table-body">
+
+                    {% for cust in customers %}
+                    <tr>
+                        <td>{{ cust.id }}</td>
+                        <td>{{ cust.name }}</td>
+                        <td>{{ cust.phone }}</td>
+                        <td>{{ cust.address }}</td>
+                        <td>
+                            <button type="button" class="edit-button" data-id="{{ cust.id }}"
+                                data-name="{{ cust.name }}" data-phone="{{ cust.phone }}"
+                                data-address="{{ cust.address }}" title="Edit customer" aria-label="Edit customer"
+                                style="margin-right:8px;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                                    <path
+                                        d="M3 21v-3.75L14.81 5.44a2 2 0 0 1 2.83 0l0.92 0.92a2 2 0 0 1 0 2.83L6.75 21H3z"
+                                        stroke="currentColor" stroke-width="1" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                    <path
+                                        d="M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
+                                        stroke="currentColor" stroke-width="1" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                </svg>
+                            </button>
+
+                            <form action="{% url 'delete_customer' cust.id %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="delete-button" title="Delete customer">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                        class="bi bi-trash" viewBox="0 0 16 16">
+                                        <path
+                                            d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
+                                        <path
+                                            d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+                                    </svg>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
     </main>
     <div class="notification" id="notification"></div>
     <script>
@@ -760,7 +793,7 @@
             const rows = table.getElementsByTagName("tr");
 
             for (let i = 0; i < rows.length; i++) {
-                const nameCell = rows[i].getElementsByTagName("td")[1]; 
+                const nameCell = rows[i].getElementsByTagName("td")[1];
                 if (nameCell) {
                     const nameText = nameCell.textContent || nameCell.innerText;
                     if (nameText.toLowerCase().indexOf(filter) > -1) {
@@ -771,8 +804,46 @@
                 }
             }
         }
+
+        // --- Edit customer functionality ---
+        document.addEventListener('click', function (e) {
+            const editBtn = e.target.closest('.edit-button');
+            if (!editBtn) return;
+            // populate modal form with data attributes
+            const id = editBtn.getAttribute('data-id');
+            const name = editBtn.getAttribute('data-name');
+            const phone = editBtn.getAttribute('data-phone');
+            const address = editBtn.getAttribute('data-address');
+
+            // show form modal
+            formContainer.style.display = 'block';
+            modalOverlay.style.display = 'block';
+
+            // set form title and values
+            document.getElementById('formTitle').textContent = 'Edit Customer';
+            // if the form fields have ids match the form, set them
+            const nameInput = document.querySelector('.customer-form input[name="name"]');
+            const phoneInput = document.querySelector('.customer-form input[name="phone"]');
+            const addressInput = document.querySelector('.customer-form textarea[name="address"]');
+            if (nameInput) nameInput.value = name || '';
+            if (phoneInput) phoneInput.value = phone || '';
+            if (addressInput) addressInput.value = address || '';
+
+            // ensure a hidden input for edit id exists
+            let editIdInput = document.querySelector('.customer-form input[name="edit_id"]');
+            if (!editIdInput) {
+                editIdInput = document.createElement('input');
+                editIdInput.type = 'hidden';
+                editIdInput.name = 'edit_id';
+                document.querySelector('.customer-form').appendChild(editIdInput);
+            }
+            editIdInput.value = id;
+
+            // scroll modal into view
+            formContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
     </script>
-    
+
 
 </body>
 
