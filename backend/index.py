@@ -5,10 +5,12 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
 import json
 from django.contrib.auth.models import User
 
 @csrf_exempt
+@login_required(login_url='login_view')
 def update_delivery_status(request, delivery_id):
     if request.method == 'POST':
         try:
@@ -58,6 +60,7 @@ def loginPage(request):
     #    logout(request)  
     #    return redirect('loginPage') 
 
+@login_required(login_url='login_view')
 def employeesInfoPage(request):
     if request.method == 'POST':
         form = MemberForm(request.POST)
@@ -73,15 +76,18 @@ def employeesInfoPage(request):
         'employees': employees
     })
 
+@login_required(login_url='login_view')
 def delete_employee(request, employee_id):
     employee = get_object_or_404(Member, pk=employee_id)
     employee.delete()
     return redirect('employeesInfoPage')
 
+@login_required(login_url='login_view')
 def menuPage(request):
     return render(request, 'menu.html')
 
 
+@login_required(login_url='login_view')
 def paymentPage(request):
     if request.method == 'POST':
         form = PaymentForm(request.POST)
@@ -99,11 +105,13 @@ def paymentPage(request):
         'payments': payments
     })
 
+@login_required(login_url='login_view')
 def delete_payment(request, payment_id):
     payment = get_object_or_404(Payment, pk=payment_id)
     payment.delete()
     return redirect('paymentPage')
 
+@login_required(login_url='login_view')
 def orderHistoryPage(request):
     if request.method == 'POST':
         print("🔸 POST received:", request.POST)
@@ -138,6 +146,7 @@ def orderHistoryPage(request):
         'orders': orders
     })
 
+@login_required(login_url='login_view')
 def delete_order(request, order_id):
     order = get_object_or_404(Order, pk=order_id)
     order.delete()
@@ -147,6 +156,7 @@ def delete_order(request, order_id):
 def signupPage(request):
     return render(request, 'signup.html')
 
+@login_required(login_url='login_view')
 def customerInfoPage(request):
     if request.method == 'POST':
         form = CustomerForm(request.POST)
@@ -162,14 +172,17 @@ def customerInfoPage(request):
         'customers': customers
     })
 
+@login_required(login_url='login_view')
 def delete_customer(request, customer_id):
     customer = get_object_or_404(Customer, pk=customer_id)
     customer.delete()
     return redirect('customerInfoPage')
 
+@login_required(login_url='login_view')
 def productPage(request):
     return render(request, 'product.html')
 
+@login_required(login_url='login_view')
 def deliveryPage(request):
     if request.method == 'POST':
         form = DeliveryForm(request.POST)
@@ -185,11 +198,13 @@ def deliveryPage(request):
         'deliveries': deliveries
     })
 
+@login_required(login_url='login_view')
 def delete_delivery(request, delivery_id):
     delivery = get_object_or_404(Delivery, pk=delivery_id)
     delivery.delete()
     return redirect('deliveryPage')
 
+@login_required(login_url='login_view')
 def salesPage(request):
     if request.method == 'POST':
         form = SalesReportForm(request.POST)
@@ -205,11 +220,13 @@ def salesPage(request):
         'sales': sales,
     })
 
+@login_required(login_url='login_view')
 def delete_sale(request, sale_id):
     sale = get_object_or_404(SalesReport, pk=sale_id)
     sale.delete()
     return redirect('salesPage')
 
+@login_required(login_url='login_view')
 def supplyPage(request):
     if request.method == 'POST':
         form = SupplyForm(request.POST)
@@ -227,9 +244,11 @@ def supplyPage(request):
         'supplies': supplies
     })
 
+@login_required(login_url='login_view')
 def aboutPage(request):
     return render(request, 'about.html')
 
+@login_required(login_url='login_view')
 def delete_supply(request, supply_id):
     supply = get_object_or_404(Supply, pk=supply_id)
     supply.delete()

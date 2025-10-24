@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from goletan1am import index
+from backend import index
 
 
 urlpatterns = [
