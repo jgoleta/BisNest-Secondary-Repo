@@ -1,16 +1,17 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from members.models import Member, Customer, Delivery, Payment, Order, Supply, SalesReport
-from members.forms import SupplyForm, MemberForm, CustomerForm, DeliveryForm, PaymentForm, OrderForm, SalesReportForm
+from members.models import Employee, Customer, Delivery, Payment, Order, Supply, SalesReport, Product
+from members.forms import SupplyForm, EmployeeForm, CustomerForm, DeliveryForm, PaymentForm, OrderForm, SalesReportForm, ProductForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.decorators import login_required
 import json
 from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from decimal import Decimal, InvalidOperation
+from django.views.decorators.http import require_POST
 
 @csrf_exempt
-@login_required(login_url='login_view')
 def update_delivery_status(request, delivery_id):
     if request.method == 'POST':
         try:
@@ -41,14 +42,14 @@ def login_view(request):
         user = authenticate(request, username=username, password=password) if username else None
         if user is not None:
             login(request, user)
-            return redirect('menuPage')  
+            return redirect('menu')  
         else:
             messages.error(request, 'Invalid email or password.')
     return render(request, 'login.html')
 
 def logout_view(request):
     logout(request)
-    return redirect('login_view')
+    return redirect('loginPage')
 
 def loginPage(request):
     return render(request, 'login.html')
@@ -60,40 +61,76 @@ def loginPage(request):
     #    logout(request)  
     #    return redirect('loginPage') 
 
-@login_required(login_url='login_view')
 def employeesInfoPage(request):
     if request.method == 'POST':
-        form = MemberForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('employeesInfoPage')  
-    else:
-        form = MemberForm()
+        edit_id = request.POST.get('edit_id')
 
-    employees = Member.objects.all() 
+        if edit_id:  # existing employee edit
+            employee = get_object_or_404(Employee, pk=edit_id)
+            # mga pdeng iedit
+            employee.name = request.POST.get('name', employee.name)
+            employee.position = request.POST.get('position', employee.position)
+            employee.schedule = request.POST.get('schedule', employee.schedule)
+            employee.salary = request.POST.get('salary', employee.salary)
+            employee.save()
+            return redirect('employeesinfo')
+
+        else:  # create
+            form = EmployeeForm(request.POST)
+            if form.is_valid():
+                form.save()
+                return redirect('employeesinfo')  
+    else:
+        form = EmployeeForm()
+
+    employees = Employee.objects.all() 
     return render(request, 'employeesinfo.html', {
         'form': form,
         'employees': employees
     })
 
-@login_required(login_url='login_view')
-def delete_employee(request, employee_id):
-    employee = get_object_or_404(Member, pk=employee_id)
-    employee.delete()
-    return redirect('employeesInfoPage')
+def customerInfoPage(request):
+    if request.method == 'POST':
+        edit_id = request.POST.get('edit_id')
 
-@login_required(login_url='login_view')
+        if edit_id:  # existing customer edit
+            customer = get_object_or_404(Customer, pk=edit_id)
+            # mga pdeng iedit
+            customer.name = request.POST.get('name', customer.name)
+            customer.phone = request.POST.get('phone', customer.phone)
+            customer.address = request.POST.get('address', customer.address)
+            customer.save()
+            return redirect('customer')
+
+        else:  # create
+            form = CustomerForm(request.POST)
+            if form.is_valid():
+                form.save()
+                return redirect('customer')
+
+    customers = Customer.objects.all()
+    form = CustomerForm()
+    return render(request, 'customer.html', {
+        'form': form,
+        'customers': customers
+    })
+
+
+def delete_employee(request, employee_id):
+    employee = get_object_or_404(Employee, pk=employee_id)
+    employee.delete()
+    return redirect('employeesinfo')
+
 def menuPage(request):
     return render(request, 'menu.html')
 
 
-@login_required(login_url='login_view')
 def paymentPage(request):
     if request.method == 'POST':
         form = PaymentForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('paymentPage')
+            return redirect('payment')
     else:
         form = PaymentForm(initial={
             'payment_id': f'P{Payment.objects.count()+1:04d}'  
@@ -105,36 +142,61 @@ def paymentPage(request):
         'payments': payments
     })
 
-@login_required(login_url='login_view')
 def delete_payment(request, payment_id):
     payment = get_object_or_404(Payment, pk=payment_id)
     payment.delete()
-    return redirect('paymentPage')
+    return redirect('payment')
 
-@login_required(login_url='login_view')
 def orderHistoryPage(request):
     if request.method == 'POST':
-        print("🔸 POST received:", request.POST)
-        form = OrderForm(request.POST)
-        if form.is_valid():
-            print("✅ VALID form")
-            order = form.save(commit=False)
-            product_map = {
-                'Whole Chicken': 'P1',
-                'Chicken Feet': 'P2',
-                'Chicken Head': 'P3',
-                'Chicken Liver': 'P4',
-                'Chicken Intestine': 'P5',
-                'Chicken Blood': 'P6',
-                'Chicken Gizzard': 'P7',
-            }
-            product_name = form.cleaned_data.get('product_name')
-            order.product_id = product_map.get(product_name, 'P0')
-            order.save()
-            return redirect('orderHistoryPage')
-        else:
-            print("❌ INVALID form")
-            print(form.errors)
+        edit_id = request.POST.get('edit_id')
+
+        if edit_id:  # Editing existing order
+            try:
+                order = get_object_or_404(Order, pk=edit_id)
+
+                # Get POST values and convert to proper types
+                customer_id = request.POST.get('customer')
+                if customer_id and customer_id.strip():
+                    order.customer_id = int(customer_id)
+
+                employee_id = request.POST.get('employee')
+                if employee_id and employee_id.strip():
+                    order.employee_id = int(employee_id)
+
+                product_id = request.POST.get('product')
+                if product_id and product_id.strip():
+                    order.product_id = int(product_id)
+
+                quantity = request.POST.get('quantity')
+                if quantity and quantity.strip():
+                    order.quantity = Decimal(quantity)
+
+                # Note: amount is auto-calculated by model's save() method
+                # so we don't need to set it manually
+
+                order.save()
+                messages.success(request, 'Order updated successfully.')
+                return redirect('history')
+                
+            except (ValueError, TypeError, InvalidOperation) as e:
+                messages.error(request, f'Invalid input data: {str(e)}')
+            except Exception as e:
+                messages.error(request, f'Error updating order: {str(e)}')
+            # Fall through to render form
+            
+            # Reinitialize form
+            form = OrderForm(initial={
+                'order_id': f"O{Order.objects.count() + 1:04d}"
+            })
+
+        else:  # Creating new order
+            form = OrderForm(request.POST)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Order created successfully.')
+                return redirect('history')
+            # If form is invalid, fall through to render with errors
     else:
         form = OrderForm(initial={
             'order_id': f"O{Order.objects.count() + 1:04d}"
@@ -146,49 +208,152 @@ def orderHistoryPage(request):
         'orders': orders
     })
 
-@login_required(login_url='login_view')
+
 def delete_order(request, order_id):
     order = get_object_or_404(Order, pk=order_id)
     order.delete()
-    return redirect('orderHistoryPage')
+    return redirect('history')
 
 
 def signupPage(request):
     return render(request, 'signup.html')
 
-@login_required(login_url='login_view')
 def customerInfoPage(request):
     if request.method == 'POST':
-        form = CustomerForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('customerInfoPage')
-    else:
-        form = CustomerForm()
+        edit_id = request.POST.get('edit_id')
+
+        if edit_id:  # existing customer edit
+            customer = get_object_or_404(Customer, pk=edit_id)
+            # mga pdeng iedit
+            customer.name = request.POST.get('name', customer.name)
+            customer.phone = request.POST.get('phone', customer.phone)
+            customer.address = request.POST.get('address', customer.address)
+            customer.save()
+            return redirect('customer')
+
+        else:  # create
+            form = CustomerForm(request.POST)
+            if form.is_valid():
+                form.save()
+                return redirect('customer')
 
     customers = Customer.objects.all()
+    form = CustomerForm()
     return render(request, 'customer.html', {
         'form': form,
         'customers': customers
     })
 
-@login_required(login_url='login_view')
 def delete_customer(request, customer_id):
     customer = get_object_or_404(Customer, pk=customer_id)
     customer.delete()
-    return redirect('customerInfoPage')
+    return redirect('customer')
 
-@login_required(login_url='login_view')
 def productPage(request):
-    return render(request, 'product.html')
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('product')
+    else:
+        form = ProductForm()
 
-@login_required(login_url='login_view')
+    products = Product.objects.all()
+    return render(request, 'product.html', {
+        'form': form,
+        'products': products
+    })
+
+def add_product(request):
+    if request.method == "POST":
+        name = request.POST.get('name')
+        price = request.POST.get('price')
+        image = request.FILES.get('image')
+
+        if not name or not price or not image:
+            return JsonResponse({'error': 'Missing fields'}, status=400)
+
+        last_product = Product.objects.order_by('-id').first()
+        new_id_number = (last_product.id + 1) if last_product else 1
+        new_id = f"P{new_id_number:02d}"
+
+
+        supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
+        bucket = "media" 
+        file_path = f"products/{image.name}"
+
+        # Read image as bytes
+        file_bytes = image.read()
+
+        res = supabase.storage.from_(bucket).upload(file_path, file_bytes)
+        if res.get("error"):
+            return JsonResponse({"error": res["error"]["message"]}, status=500)
+
+        public_url = supabase.storage.from_(bucket).get_public_url(file_path)
+
+        product = Product.objects.create(
+            product_id=new_id,
+            name=name,
+            price=price,
+            image=public_url 
+        )
+
+        return JsonResponse({
+            'success': True,
+            'id': product.product_id,
+            'image_url': public_url,
+        })
+    return JsonResponse({'error': 'Invalid method'}, status=405)
+
+
+@login_required
+@require_POST
+def update_product(request):
+
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        product_id = data.get('product_id')
+        price = data.get('price')
+        if not product_id or price is None:
+            return JsonResponse({'success': False, 'error': 'Missing product_id or price'}, status=400)
+
+        product = Product.objects.get(product_id=product_id)
+        product.price = Decimal(str(price))
+        product.save()
+        return JsonResponse({'success': True, 'product_id': product.product_id, 'price': str(product.price)})
+    except Product.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Product not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@require_POST
+def delete_product(request):
+
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        product_id = data.get('product_id')
+        if not product_id:
+            return JsonResponse({'success': False, 'error': 'Missing product_id'}, status=400)
+        product = Product.objects.get(product_id=product_id)
+        product.delete()
+        return JsonResponse({'success': True, 'product_id': product_id})
+    except Product.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Product not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+def get_products(request):
+    products = Product.objects.all().values('product_id', 'name', 'stock', 'price', 'image')
+    return JsonResponse(list(products), safe=False)
+
 def deliveryPage(request):
     if request.method == 'POST':
         form = DeliveryForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('deliveryPage')
+            return redirect('delivery')
     else:
         form = DeliveryForm()
 
@@ -198,41 +363,28 @@ def deliveryPage(request):
         'deliveries': deliveries
     })
 
-@login_required(login_url='login_view')
 def delete_delivery(request, delivery_id):
     delivery = get_object_or_404(Delivery, pk=delivery_id)
     delivery.delete()
-    return redirect('deliveryPage')
+    return redirect('delivery')
 
-@login_required(login_url='login_view')
 def salesPage(request):
-    if request.method == 'POST':
-        form = SalesReportForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('salesPage')
-    else:
-        form = SalesReportForm()
-
-    sales = SalesReport.objects.all().order_by('-date')
+    sales = Payment.objects.all().order_by('-date')
     return render(request, 'sales.html', {
-        'form': form,
         'sales': sales,
     })
 
-@login_required(login_url='login_view')
 def delete_sale(request, sale_id):
     sale = get_object_or_404(SalesReport, pk=sale_id)
     sale.delete()
-    return redirect('salesPage')
+    return redirect('sales')
 
-@login_required(login_url='login_view')
 def supplyPage(request):
     if request.method == 'POST':
         form = SupplyForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('supplyPage')
+            return redirect('supply')
     else:
         form = SupplyForm(initial={
             'supply_id': f"SUP{Supply.objects.count() + 1:04d}"
@@ -244,15 +396,13 @@ def supplyPage(request):
         'supplies': supplies
     })
 
-@login_required(login_url='login_view')
 def aboutPage(request):
     return render(request, 'about.html')
 
-@login_required(login_url='login_view')
 def delete_supply(request, supply_id):
     supply = get_object_or_404(Supply, pk=supply_id)
     supply.delete()
-    return redirect('supplyPage')
+    return redirect('supply')
 
 def register_view(request):
     if request.method == 'POST':
